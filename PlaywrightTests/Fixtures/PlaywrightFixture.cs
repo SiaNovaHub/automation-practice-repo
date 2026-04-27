@@ -40,6 +40,8 @@ public class PlaywrightFixture : IAsyncLifetime
     {
         var context = await Browser.NewContextAsync(new BrowserNewContextOptions
         {
+            BaseURL = _settings.BaseUrl,
+
             ViewportSize = _settings.ContextOptions.UseViewport
                 ? new()
                 {

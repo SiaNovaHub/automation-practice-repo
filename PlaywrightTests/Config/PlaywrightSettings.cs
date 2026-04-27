@@ -2,6 +2,7 @@ namespace PlaywrightTests.Config;
 
 public class PlaywrightSettings
 {
+    public string BaseUrl { get; set; } = "";
     public string Browser { get; set; } = "chromium";
     public LaunchOptions LaunchOptions { get; set; } = new();
     public ContextOptions ContextOptions { get; set; } = new();
