@@ -1,10 +1,9 @@
 using Microsoft.Playwright;
 using PlaywrightTests.Config;
-using Xunit;
 
 namespace PlaywrightTests.Fixtures;
 
-public class PlaywrightFixture : IAsyncLifetime
+public class BrowserFixture : IAsyncLifetime
 {
     public IBrowser Browser { get; private set; } = default!;
 

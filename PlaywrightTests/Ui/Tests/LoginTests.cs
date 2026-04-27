@@ -2,11 +2,11 @@
 using static Microsoft.Playwright.Assertions;
 using PlaywrightTests.Fixtures;
 
-namespace PlaywrightTests;
+namespace PlaywrightTests.Ui.Tests;
 
-public class LoginTests(PlaywrightFixture fixture) : IClassFixture<PlaywrightFixture>
+public class LoginTests(BrowserFixture fixture) : IClassFixture<BrowserFixture>
 {
-    private readonly PlaywrightFixture _fixture = fixture;
+    private readonly BrowserFixture _fixture = fixture;
 
     [Fact]
     public async Task EmptyLogin()
@@ -15,7 +15,7 @@ public class LoginTests(PlaywrightFixture fixture) : IClassFixture<PlaywrightFix
         var page = await context.NewPageAsync();
 
         await page.GotoAsync("/");
-        await page.GetByRole(AriaRole.Button, new() { Name = "Sign In"}).ClickAsync();
+        await page.GetByRole(AriaRole.Button, new() { Name = "Sign In" }).ClickAsync();
 
         var emailError = page.Locator("#email").Locator("xpath=..").Locator("p");
         var passwordError = page.Locator("#password").Locator("xpath=..").Locator("p");
@@ -34,9 +34,9 @@ public class LoginTests(PlaywrightFixture fixture) : IClassFixture<PlaywrightFix
         var password = "passWord123!";
 
         await page.GotoAsync("/");
-        await page.GetByRole(AriaRole.Textbox, new() { Name = "Email"}).FillAsync(email);
-        await page.GetByRole(AriaRole.Textbox, new() { Name = "Password"}).FillAsync(password);
-        await page.GetByRole(AriaRole.Button, new() { Name = "Sign In"}).ClickAsync();
+        await page.GetByRole(AriaRole.Textbox, new() { Name = "Email" }).FillAsync(email);
+        await page.GetByRole(AriaRole.Textbox, new() { Name = "Password" }).FillAsync(password);
+        await page.GetByRole(AriaRole.Button, new() { Name = "Sign In" }).ClickAsync();
 
         var userEmailDisplayed = page.GetByTestId("user-email-display");
         await Expect(userEmailDisplayed).ToHaveTextAsync(email);
@@ -53,13 +53,13 @@ public class LoginTests(PlaywrightFixture fixture) : IClassFixture<PlaywrightFix
 
         await page.GotoAsync("/");
 
-        await page.GetByRole(AriaRole.Textbox, new() { Name = "Email"}).FillAsync(email);
-        await page.GetByRole(AriaRole.Textbox, new() { Name = "Password"}).FillAsync(password);
+        await page.GetByRole(AriaRole.Textbox, new() { Name = "Email" }).FillAsync(email);
+        await page.GetByRole(AriaRole.Textbox, new() { Name = "Password" }).FillAsync(password);
 
-        await page.GetByRole(AriaRole.Button, new() { Name = "Sign In"}).ClickAsync();
+        await page.GetByRole(AriaRole.Button, new() { Name = "Sign In" }).ClickAsync();
 
         await page.GetByTestId("logout-btn").ClickAsync();
 
-        await Expect(page.GetByRole(AriaRole.Button, new() { Name = "Sign In"})).ToBeVisibleAsync();
+        await Expect(page.GetByRole(AriaRole.Button, new() { Name = "Sign In" })).ToBeVisibleAsync();
     }
 }

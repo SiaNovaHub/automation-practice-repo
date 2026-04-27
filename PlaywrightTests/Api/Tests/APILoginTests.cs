@@ -1,30 +1,29 @@
-﻿namespace PlaywrightTests
+﻿namespace PlaywrightTests.Api.Tests;
+
+public class APILoginTests(ApiClientFactory factory) : IClassFixture<ApiClientFactory>
 {
-    public class APILoginTests(ApiContextFactory factory) : IClassFixture<ApiContextFactory>
+    private readonly ApiClientFactory _factory = factory;
+
+    [Fact]
+    public async Task LoginReturnsValidToken()
     {
-        private readonly ApiContextFactory _factory = factory;
+        await using var request = await _factory.CreateContextAsync();
 
-        [Fact]
-        public async Task LoginReturnsValidToken()
+        var response = await request.PostAsync("/api/auth/login", new()
         {
-            await using var request = await _factory.CreateContextAsync();
-
-            var response = await request.PostAsync("/api/auth/login", new()
+            DataObject = new
             {
-                DataObject = new
-                {
-                    email = "testaz@test.com",
-                    password = "passWord123!"
-                }
-            });
+                email = "testaz@test.com",
+                password = "passWord123!"
+            }
+        });
 
-            Assert.True(response.Ok);
+        Assert.True(response.Ok);
 
-            var json = await response.JsonAsync();
-            var token = json.Value.GetProperty("token").GetString();
+        var json = await response.JsonAsync();
+        var token = json.Value.GetProperty("token").GetString();
 
-            Assert.False(string.IsNullOrEmpty(token));
-        }
-    
+        Assert.False(string.IsNullOrEmpty(token));
     }
+
 }
