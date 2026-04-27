@@ -2,85 +2,114 @@
 
 **Creator:** Anastasiia Zelenova
 
-This repository contains a UI automation framework built with **.NET**, **xUnit**, and **Microsoft Playwright**.
+This repository contains a .NET automation framework built with **xUnit** and **Microsoft Playwright**.
 
 ## Overview
 
-The solution is organized as a single test project named `PlaywrightTests`.
+The solution has one test project: `PlaywrightTests`.
 
-Main technologies used:
+It is currently structured into:
+
+- **UI automation** under `Ui/`
+- **API automation** under `Api/`
+- **shared fixtures** under `Fixtures/`
+- **configuration classes** under `Config/`
+
+Main technologies:
 
 - **.NET** (`net10.0`)
-- **xUnit** for test execution
-- **Microsoft.Playwright.Xunit** for browser automation
-- **Microsoft.Extensions.Configuration** for loading runtime settings
+- **xUnit**
+- **Microsoft.Playwright.Xunit**
+- **Microsoft.Extensions.Configuration**
 
 ## Repository Structure
 
 ```text
-automation-practice-repo.sln       Solution file
+automation-practice-repo.sln
 PlaywrightTests/
-├── PlaywrightTests.csproj         Test project and package references
-├── LoginTests.cs                  Test class file
-├── appsettings.json               Framework runtime settings
+├── PlaywrightTests.csproj
+├── appsettings.json
+├── Api/
+│   ├── Clients/
+│   └── Tests/
+│       └── APILoginTests.cs
 ├── Config/
-│   ├── ConfigLoader.cs            Reads configuration from JSON and environment variables
-│   └── PlaywrightSettings.cs      Strongly typed settings models
+│   ├── ConfigLoader.cs
+│   └── PlaywrightSettings.cs
 ├── Fixtures/
-│   └── PlaywrightFixture.cs       Shared Playwright browser fixture
-├── bin/                           Generated build output
-└── obj/                           Generated intermediate output
+│   ├── ApiClientFactory.cs
+│   └── BrowserFixture.cs
+├── Ui/
+│   ├── Pages/
+│   └── Tests/
+│       └── LoginTests.cs
+├── bin/
+└── obj/
 ```
 
 ## Framework Structure
 
 ### `PlaywrightTests.csproj`
-Defines the test project, target framework, and NuGet dependencies.
+Contains the project definition, target framework, and NuGet package references.
 
-### `Fixtures/PlaywrightFixture.cs`
-This is the core shared fixture for the framework. It is responsible for:
+### `Config/`
+Holds the configuration layer for the framework.
 
-- creating the Playwright instance
-- launching the configured browser
-- creating browser contexts
-- cleaning up browser resources after execution
+- `ConfigLoader.cs` loads settings from `appsettings.json` and environment variables
+- `PlaywrightSettings.cs` defines strongly typed settings models
 
-### `Config/ConfigLoader.cs`
-Loads framework settings from `appsettings.json` and environment variables.
+### `Fixtures/`
+Holds the shared setup used by tests.
 
-### `Config/PlaywrightSettings.cs`
-Contains the settings classes used by the framework, including:
+- `BrowserFixture.cs` creates and manages the Playwright browser for UI tests
+- `ApiClientFactory.cs` creates Playwright API request contexts for API tests
 
-- browser selection
-- launch options
-- viewport settings
-- timeout configuration
+### `Ui/`
+Contains UI automation code.
+
+- `Tests/` stores UI test classes
+- `Pages/` is available for page objects or other UI abstractions
+
+### `Api/`
+Contains API automation code.
+
+- `Tests/` stores API test classes
+- `Clients/` is available for API client abstractions
 
 ### `appsettings.json`
-Stores the default local execution settings for the framework, such as:
+Stores runtime settings for the framework, including:
 
+- UI base URL
+- API base URL
 - browser type
-- headless mode
-- slow motion
-- viewport size
+- launch options
+- viewport settings
 - timeout
 
 ## Execution Flow
 
-At a high level, the framework works like this:
+### UI layer
 
-1. configuration is loaded from `appsettings.json`
-2. the Playwright fixture starts the browser
-3. tests create a new browser context and page
-4. Playwright runs browser actions and assertions
-5. resources are cleaned up after execution
+1. settings are loaded from `appsettings.json`
+2. `BrowserFixture` starts Playwright and launches the browser
+3. tests create a browser context and page
+4. Playwright performs browser actions and assertions
+5. resources are disposed after execution
+
+### API layer
+
+1. settings are loaded from `appsettings.json`
+2. `ApiClientFactory` creates an API request context
+3. tests send HTTP requests through Playwright's API features
+4. responses are validated in xUnit tests
+5. resources are disposed after execution
 
 ## Prerequisites
 
 Before running the framework, make sure you have:
 
 - a compatible **.NET SDK** installed for `net10.0`
-- internet access to reach `https://eventhub.rahulshettyacademy.com`
+- internet access to reach the configured application URLs
 - Playwright browsers installed locally
 
 ## Setup
