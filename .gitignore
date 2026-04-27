@@ -1,0 +1,5 @@
+# Minimal ignores for current repo state
+**/bin/
+**/obj/
+.vs/
+TestResults/
