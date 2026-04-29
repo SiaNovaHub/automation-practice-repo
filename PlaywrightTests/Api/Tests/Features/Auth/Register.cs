@@ -1,4 +1,6 @@
-namespace PlaywrightTests.Api.Tests.Auth;
+using PlaywrightTests.Api.Tests.Infrastructure.Contexts;
+
+namespace PlaywrightTests.Api.Tests.Features.Auth;
 
 public class RegisterTests(ApiClientFactory factory) : IClassFixture<ApiClientFactory>
 {

@@ -1,7 +1,7 @@
 using Microsoft.Playwright;
 using PlaywrightTests.Api.Clients;
 
-namespace PlaywrightTests.Api.Tests.Auth;
+namespace PlaywrightTests.Api.Tests.Infrastructure.Contexts;
 
 public class AuthTestContext(IAPIRequestContext request) : IAsyncDisposable
 {

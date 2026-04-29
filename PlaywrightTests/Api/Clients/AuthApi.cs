@@ -1,5 +1,5 @@
 using Microsoft.Playwright;
-using PlaywrightTests.Api.Models;
+using PlaywrightTests.Api.Models.Responses;
 
 namespace PlaywrightTests.Api.Clients;
 

@@ -1,4 +1,4 @@
-namespace PlaywrightTests.Api.Models;
+namespace PlaywrightTests.Api.Models.Responses;
 
 public class AuthUser
 {

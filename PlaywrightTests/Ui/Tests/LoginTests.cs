@@ -19,9 +19,11 @@ public class LoginTests(
         await using var context = await _fixture.CreateContextAsync();
         var page = await context.NewPageAsync();
 
+        //Act
         await page.GotoAsync("/");
         await page.GetByRole(AriaRole.Button, new() { Name = "Sign In" }).ClickAsync();
 
+        //Assert
         var emailError = page.Locator("#email").Locator("xpath=..").Locator("p");
         var passwordError = page.Locator("#password").Locator("xpath=..").Locator("p");
 

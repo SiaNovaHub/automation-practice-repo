@@ -8,7 +8,7 @@ This repository contains a .NET automation framework built with **xUnit** and **
 
 The solution currently contains a single test project: `PlaywrightTests`.
 
-The framework is split into:
+The framework is organized into:
 
 - **Ui/** for UI automation
 - **Api/** for API automation
@@ -32,14 +32,31 @@ PlaywrightTests/
 ├── appsettings.json
 ├── Api/
 │   ├── Clients/
-│   │   └── AuthApi.cs
+│   │   ├── AuthApi.cs
+│   │   └── EventApi.cs
 │   ├── Models/
-│   │   └── AuthUser.cs
+│   │   ├── Queries/
+│   │   │   └── EventQuery.cs
+│   │   ├── Requests/
+│   │   │   └── UpsertEventRequest.cs
+│   │   └── Responses/
+│   │       ├── AuthUser.cs
+│   │       ├── EventDto.cs
+│   │       └── EventListResponse.cs
 │   └── Tests/
-│       └── Auth/
-│           ├── AuthTestContext.cs
-│           ├── Login.cs
-│           └── Register.cs
+│       ├── Features/
+│       │   ├── Auth/
+│       │   │   ├── Login.cs
+│       │   │   ├── Me.cs
+│       │   │   └── Register.cs
+│       │   └── Events/
+│       │       └── Events.cs
+│       └── Infrastructure/
+│           ├── Contexts/
+│           │   ├── AuthTestContext.cs
+│           │   └── EventTestContext.cs
+│           └── Helpers/
+│               └── EventTestHelpers.cs
 ├── Config/
 │   ├── ConfigLoader.cs
 │   └── PlaywrightSettings.cs
@@ -47,6 +64,8 @@ PlaywrightTests/
 │   ├── ApiClientFactory.cs
 │   └── BrowserFixture.cs
 ├── Ui/
+│   ├── Helpers/
+│   │   └── AuthHelper.cs
 │   ├── Pages/
 │   └── Tests/
 │       └── LoginTests.cs
@@ -71,18 +90,40 @@ Contains shared factories and fixtures.
 - `BrowserFixture.cs` manages the browser lifecycle for UI tests
 - `ApiClientFactory.cs` creates API request contexts for API tests
 
-### `Ui/`
-Contains UI automation structure.
-
-- `Tests/` contains UI test classes
-- `Pages/` is reserved for page objects and UI abstractions
-
 ### `Api/`
 Contains API automation structure.
 
-- `Clients/` contains API helper classes such as `AuthApi`
-- `Models/` contains API data models such as `AuthUser`
-- `Tests/` contains API tests, currently grouped under `Auth/`
+#### `Api/Clients/`
+API helper classes used by tests.
+
+- `AuthApi.cs` handles authentication-related API calls
+- `EventApi.cs` handles `/events` API operations and deserializes typed responses
+
+#### `Api/Models/`
+Typed API models separated by purpose.
+
+- `Queries/` contains query models such as `EventQuery`
+- `Requests/` contains request payload models such as `UpsertEventRequest`
+- `Responses/` contains response models such as `AuthUser`, `EventDto`, `EventResponse`, `EventListResponse`, and `PaginationMeta`
+
+#### `Api/Tests/Features/`
+Feature-level API tests.
+
+- `Features/Auth/` contains auth API tests for register, login, and `/auth/me`
+- `Features/Events/` contains tests for the `/events` endpoints
+
+#### `Api/Tests/Infrastructure/`
+Shared API test support.
+
+- `Contexts/` contains test contexts that bundle request context + API clients
+- `Helpers/` contains reusable helper methods for API test setup and response parsing
+
+### `Ui/`
+Contains UI automation structure.
+
+- `Helpers/` contains reusable UI-side helpers such as API-based login support
+- `Pages/` is reserved for page objects and UI abstractions
+- `Tests/` contains UI test classes
 
 ### `appsettings.json`
 Contains runtime settings for the framework, including:
@@ -101,16 +142,18 @@ Contains runtime settings for the framework, including:
 1. settings are loaded from `appsettings.json`
 2. `BrowserFixture` starts Playwright and launches the browser
 3. UI tests create a browser context and page
-4. tests run browser actions and assertions
-5. resources are disposed after execution
+4. UI helpers can prepare authenticated state when needed
+5. tests run browser actions and assertions
+6. resources are disposed after execution
 
 ### API flow
 
 1. settings are loaded from `appsettings.json`
 2. `ApiClientFactory` creates an API request context
-3. API helpers send requests through Playwright's API layer
-4. tests validate the responses
-5. resources are disposed after execution
+3. test contexts initialize the needed API clients
+4. API clients send requests and deserialize typed responses
+5. tests validate status codes and response content
+6. resources are disposed after execution
 
 ## Prerequisites
 
