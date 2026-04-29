@@ -62,15 +62,20 @@ public class AuthApi(IAPIRequestContext request)
         return json.Value.GetProperty("token").GetString()!;
     }
 
-    public async Task<AuthUser> GetCurrentUserAsync(string token)
+    public async Task<IAPIResponse> GetCurrentUserRawAsync(string token)
     {
-        var response = await _request.GetAsync("/api/auth/me", new()
+        return await _request.GetAsync("/api/auth/me", new()
         {
             Headers = new Dictionary<string, string>
             {
                 ["Authorization"] = $"Bearer {token}"
             }
         });
+    }
+
+    public async Task<AuthUser> GetCurrentUserAsync(string token)
+    {
+        var response = await GetCurrentUserRawAsync(token);
 
         if (!response.Ok)
         {
@@ -79,10 +84,12 @@ public class AuthApi(IAPIRequestContext request)
         }
 
         var json = await response.JsonAsync();
+        var user = json.Value.GetProperty("user");
+
         return new AuthUser
         {
-            Id = json.Value.GetProperty("id").GetInt32().ToString(),
-            Email = json.Value.GetProperty("email").GetString()!,
+            Id = user.GetProperty("userId").GetInt32().ToString(),
+            Email = user.GetProperty("email").GetString()!,
             Token = token
         };
     }
