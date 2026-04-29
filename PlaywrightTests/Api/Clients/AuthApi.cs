@@ -31,6 +31,7 @@ public class AuthApi(IAPIRequestContext request)
             Token = root.GetProperty("token").GetString()!
         };
     }
+
     public async Task<IAPIResponse> RegisterRawUserAsync(string email, string password)
     {
         return await _request.PostAsync("/api/auth/register", new()
@@ -38,12 +39,18 @@ public class AuthApi(IAPIRequestContext request)
             DataObject = new { email, password }
         });
     }
-    public async Task<string> LoginAsync(string email, string password)
+
+    public async Task<IAPIResponse> LoginRawAsync(string email, string password)
     {
-        var response = await _request.PostAsync("/api/auth/login", new()
+        return await _request.PostAsync("/api/auth/login", new()
         {
             DataObject = new { email, password }
         });
+    }
+
+    public async Task<string> LoginAsync(string email, string password)
+    {
+        var response = await LoginRawAsync(email, password);
 
         if (!response.Ok)
         {
