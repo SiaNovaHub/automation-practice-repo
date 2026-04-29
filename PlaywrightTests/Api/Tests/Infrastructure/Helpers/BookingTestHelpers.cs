@@ -1,16 +1,16 @@
 using Microsoft.Playwright;
 using System.Text.Json;
-using PlaywrightTests.Api.Clients;
 using PlaywrightTests.Api.Models.Requests;
+using PlaywrightTests.Api.Models.Responses;
+using PlaywrightTests.Api.Tests.Infrastructure.Contexts;
 
 namespace PlaywrightTests.Api.Tests.Infrastructure.Helpers;
 
-public static class EventTestHelpers
+public static class BookingTestHelpers
 {
-    public static async Task<int> CreateTestEventAsync(EventApi events, string token, UpsertEventRequest input)
+    public static async Task<BookingDto> CreateTestBookingAsync(BookingTestContext context, string token, CreateBookingRequest input)
     {
-        var response = await events.CreateEventAsync(token, input);
-        return response.Id;
+        return await context.Bookings.CreateBookingAsync(token, input);
     }
 
     public static async Task<JsonElement> GetRootAsync(IAPIResponse response)

@@ -1,6 +1,7 @@
 using PlaywrightTests.Api.Tests.Infrastructure.Contexts;
-using PlaywrightTests.Api.Models.Requests;
 using PlaywrightTests.Api.Tests.Infrastructure.Helpers;
+using PlaywrightTests.Api.Tests.Infrastructure.Auth;
+using PlaywrightTests.Api.Tests.Infrastructure.Builders;
 
 namespace PlaywrightTests.Api.Tests.Features.Events;
 
@@ -14,36 +15,11 @@ public class EventsTests(ApiClientFactory factory) : IClassFixture<ApiClientFact
         return new EventTestContext(request);
     }
 
-    private static UpsertEventRequest BuildEventInput()
-    {
-        return new UpsertEventRequest
-        {
-            Title = $"Test Event {Guid.NewGuid():N}"[..19],
-            Description = "API test event",
-            Category = "Conference",
-            Venue = "Test Venue",
-            City = "Bangalore",
-            EventDate = "2026-06-15T09:00:00.000Z",
-            Price = 1500,
-            TotalSeats = 50,
-            ImageUrl = "https://example.com/banner.jpg"
-        };
-    }
-
-    private static async Task<string> CreateUserTokenAsync(EventTestContext context)
-    {
-        var email = $"test_{Guid.NewGuid()}@test.com";
-        var password = "Password123!";
-
-        var user = await context.Auth.RegisterUserAsync(email, password);
-        return user.Token;
-    }
-
     [Fact]
     public async Task ListEvents_Returns200()
     {
         await using var context = await CreateContextAsync();
-        var token = await CreateUserTokenAsync(context);
+        var token = await AuthHelper.CreateUserTokenAsync(context.Auth);
 
         // Act
         var response = await context.Events.ListEventsAsync(token);
@@ -70,8 +46,8 @@ public class EventsTests(ApiClientFactory factory) : IClassFixture<ApiClientFact
     public async Task CreateEvent_WithValidData_Returns201()
     {
         await using var context = await CreateContextAsync();
-        var token = await CreateUserTokenAsync(context);
-        var input = BuildEventInput();
+        var token = await AuthHelper.CreateUserTokenAsync(context.Auth);
+        var input = EventBuilder.Valid();
 
         // Act
         var response = await context.Events.CreateRawEventAsync(token, input);
@@ -84,8 +60,8 @@ public class EventsTests(ApiClientFactory factory) : IClassFixture<ApiClientFact
     public async Task CreateEvent_WithValidData_ReturnsValidResponseStructure()
     {
         await using var context = await CreateContextAsync();
-        var token = await CreateUserTokenAsync(context);
-        var input = BuildEventInput();
+        var token = await AuthHelper.CreateUserTokenAsync(context.Auth);
+        var input = EventBuilder.Valid();
 
         // Act
         var response = await context.Events.CreateEventResponseAsync(token, input);
@@ -100,8 +76,8 @@ public class EventsTests(ApiClientFactory factory) : IClassFixture<ApiClientFact
     public async Task CreateEvent_WithValidData_ReturnsValidResponseData()
     {
         await using var context = await CreateContextAsync();
-        var token = await CreateUserTokenAsync(context);
-        var input = BuildEventInput();
+        var token = await AuthHelper.CreateUserTokenAsync(context.Auth);
+        var input = EventBuilder.Valid();
 
         // Act
         var response = await context.Events.CreateEventResponseAsync(token, input);
@@ -116,8 +92,8 @@ public class EventsTests(ApiClientFactory factory) : IClassFixture<ApiClientFact
     public async Task CreateEvent_WithMissingTitle_Returns400()
     {
         await using var context = await CreateContextAsync();
-        var token = await CreateUserTokenAsync(context);
-        var input = BuildEventInput();
+        var token = await AuthHelper.CreateUserTokenAsync(context.Auth);
+        var input = EventBuilder.Valid();
         input.Title = "";
 
         // Act
@@ -140,9 +116,9 @@ public class EventsTests(ApiClientFactory factory) : IClassFixture<ApiClientFact
     public async Task GetEventById_WithExistingId_Returns200()
     {
         await using var context = await CreateContextAsync();
-        var token = await CreateUserTokenAsync(context);
-        var input = BuildEventInput();
-        var id = await EventTestHelpers.CreateTestEventAsync(context, token, input);
+        var token = await AuthHelper.CreateUserTokenAsync(context.Auth);
+        var input = EventBuilder.Valid();
+        var id = await EventTestHelpers.CreateTestEventAsync(context.Events, token, input);
 
         try
         {
@@ -170,7 +146,7 @@ public class EventsTests(ApiClientFactory factory) : IClassFixture<ApiClientFact
     public async Task GetEventById_WithUnknownId_Returns404()
     {
         await using var context = await CreateContextAsync();
-        var token = await CreateUserTokenAsync(context);
+        var token = await AuthHelper.CreateUserTokenAsync(context.Auth);
         var eventId = 999999;
 
         // Act
@@ -190,10 +166,10 @@ public class EventsTests(ApiClientFactory factory) : IClassFixture<ApiClientFact
     public async Task UpdateEvent_WithValidData_Returns200()
     {
         await using var context = await CreateContextAsync();
-        var token = await CreateUserTokenAsync(context);
-        var input = BuildEventInput();
-        var id = await EventTestHelpers.CreateTestEventAsync(context, token, input);
-        var updatedInput = BuildEventInput();
+        var token = await AuthHelper.CreateUserTokenAsync(context.Auth);
+        var input = EventBuilder.Valid();
+        var id = await EventTestHelpers.CreateTestEventAsync(context.Events, token, input);
+        var updatedInput = EventBuilder.Valid();
         updatedInput.Title = $"Updated Event {Guid.NewGuid():N}"[..22];
         updatedInput.Description = "Updated API test event";
 
@@ -225,9 +201,9 @@ public class EventsTests(ApiClientFactory factory) : IClassFixture<ApiClientFact
     public async Task UpdateEvent_WithUnknownId_Returns404()
     {
         await using var context = await CreateContextAsync();
-        var token = await CreateUserTokenAsync(context);
+        var token = await AuthHelper.CreateUserTokenAsync(context.Auth);
         var eventId = 999999;
-        var input = BuildEventInput();
+        var input = EventBuilder.Valid();
 
         // Act
         var response = await context.Events.UpdateRawAsync(token, eventId, input);
@@ -246,9 +222,9 @@ public class EventsTests(ApiClientFactory factory) : IClassFixture<ApiClientFact
     public async Task DeleteEvent_WithExistingId_Returns200()
     {
         await using var context = await CreateContextAsync();
-        var token = await CreateUserTokenAsync(context);
-        var input = BuildEventInput();
-        var id = await EventTestHelpers.CreateTestEventAsync(context, token, input);
+        var token = await AuthHelper.CreateUserTokenAsync(context.Auth);
+        var input = EventBuilder.Valid();
+        var id = await EventTestHelpers.CreateTestEventAsync(context.Events, token, input);
 
         // Act
         var response = await context.Events.DeleteRawAsync(token, id);
@@ -267,7 +243,7 @@ public class EventsTests(ApiClientFactory factory) : IClassFixture<ApiClientFact
     public async Task DeleteEvent_WithUnknownId_Returns404()
     {
         await using var context = await CreateContextAsync();
-        var token = await CreateUserTokenAsync(context);
+        var token = await AuthHelper.CreateUserTokenAsync(context.Auth);
         var eventId = 999999;
 
         // Act

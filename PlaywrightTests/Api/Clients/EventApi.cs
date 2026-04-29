@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Playwright;
 using PlaywrightTests.Api.Models.Responses;
 using PlaywrightTests.Api.Models.Requests;
@@ -12,7 +13,8 @@ public class EventApi(IAPIRequestContext request)
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
-        PropertyNameCaseInsensitive = true
+        PropertyNameCaseInsensitive = true,
+        NumberHandling = JsonNumberHandling.AllowReadingFromString
     };
 
     private static Dictionary<string, string> CreateHeaders(string token)
