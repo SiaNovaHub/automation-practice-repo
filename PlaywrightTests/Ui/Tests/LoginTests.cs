@@ -1,7 +1,7 @@
-﻿using Microsoft.Playwright;
 using static Microsoft.Playwright.Assertions;
 using PlaywrightTests.Fixtures;
 using PlaywrightTests.Ui.Helpers;
+using PlaywrightTests.Ui.Pages;
 
 namespace PlaywrightTests.Ui.Tests;
 
@@ -18,38 +18,34 @@ public class LoginTests(
     {
         await using var context = await _fixture.CreateContextAsync();
         var page = await context.NewPageAsync();
+        var loginPage = new LoginPage(page);
 
-        //Act
-        await page.GotoAsync("/");
-        await page.GetByRole(AriaRole.Button, new() { Name = "Sign In" }).ClickAsync();
+        // Act
+        await loginPage.NavigateAsync();
+        await loginPage.SubmitAsync();
 
-        //Assert
-        var emailError = page.Locator("#email").Locator("xpath=..").Locator("p");
-        var passwordError = page.Locator("#password").Locator("xpath=..").Locator("p");
-
-        await Expect(emailError).ToHaveTextAsync("Enter a valid email");
-        await Expect(passwordError).ToHaveTextAsync("Password must be at least 6 characters");
+        // Assert
+        await Expect(loginPage.EmailError).ToHaveTextAsync("Enter a valid email");
+        await Expect(loginPage.PasswordError).ToHaveTextAsync("Password must be at least 6 characters");
     }
 
     [Fact]
     public async Task ValidLogin()
     {
         await using var context = await _fixture.CreateContextAsync();
+
+        var user = await AuthHelper.RegisterUserAsync(_apiFactory);
         var page = await context.NewPageAsync();
+        var loginPage = new LoginPage(page);
+        var navigationBar = new NavigationBar(page);
 
-        var email = "testaz@test.com";
-        var password = "passWord123!";
+        // Act
+        await loginPage.NavigateAsync();
+        await loginPage.LoginAsync(user.Email, user.Password);
 
-        //Act
-        await page.GotoAsync("/");
-        await page.GetByRole(AriaRole.Textbox, new() { Name = "Email" }).FillAsync(email);
-        await page.GetByRole(AriaRole.Textbox, new() { Name = "Password" }).FillAsync(password);
-        await page.GetByRole(AriaRole.Button, new() { Name = "Sign In" }).ClickAsync();
-
-        //Assert
-        var userEmailDisplayed = page.GetByTestId("user-email-display");
+        // Assert
         await page.WaitForURLAsync("**/");
-        await Expect(userEmailDisplayed).ToHaveTextAsync(email);
+        await Expect(navigationBar.UserEmail).ToHaveTextAsync(user.Email);
     }
 
     [Fact]
@@ -57,26 +53,20 @@ public class LoginTests(
     {
         await using var context = await _fixture.CreateContextAsync();
 
-        var email = "testaz@test.com";
-        var password = "passWord123!";
-
-        //Arrange
-        await AuthHelper.LoginViaApiAsync(context, _apiFactory, email, password);
+        // Arrange
+        await AuthHelper.RegisterAndAuthenticateAsync(context, _apiFactory);
 
         var page = await context.NewPageAsync();
+        var navigationBar = new NavigationBar(page);
+        var loginPage = new LoginPage(page);
 
-        //Act
         await page.GotoAsync("/");
 
-        await page.GetByRole(AriaRole.Textbox, new() { Name = "Email" }).FillAsync(email);
-        await page.GetByRole(AriaRole.Textbox, new() { Name = "Password" }).FillAsync(password);
+        // Act
+        await navigationBar.LogoutAsync();
 
-        await page.GetByRole(AriaRole.Button, new() { Name = "Sign In" }).ClickAsync();
-
-        await page.GetByTestId("logout-btn").ClickAsync();
-
-        //Assert
+        // Assert
         await page.WaitForURLAsync("**/login");
-        await Expect(page.GetByRole(AriaRole.Button, new() { Name = "Sign In" })).ToBeVisibleAsync();
+        await Expect(loginPage.SignInButton).ToBeVisibleAsync();
     }
 }
