@@ -6,14 +6,14 @@ This repository contains a .NET automation framework built with **xUnit** and **
 
 ## Overview
 
-The solution has one test project: `PlaywrightTests`.
+The solution currently contains a single test project: `PlaywrightTests`.
 
-It is currently structured into:
+The framework is split into:
 
-- **UI automation** under `Ui/`
-- **API automation** under `Api/`
-- **shared fixtures** under `Fixtures/`
-- **configuration classes** under `Config/`
+- **Ui/** for UI automation
+- **Api/** for API automation
+- **Fixtures/** for shared setup
+- **Config/** for runtime configuration
 
 Main technologies:
 
@@ -26,13 +26,20 @@ Main technologies:
 
 ```text
 automation-practice-repo.sln
+README.md
 PlaywrightTests/
 ├── PlaywrightTests.csproj
 ├── appsettings.json
 ├── Api/
 │   ├── Clients/
+│   │   └── AuthApi.cs
+│   ├── Models/
+│   │   └── AuthUser.cs
 │   └── Tests/
-│       └── APILoginTests.cs
+│       └── Auth/
+│           ├── AuthTestContext.cs
+│           ├── Login.cs
+│           └── Register.cs
 ├── Config/
 │   ├── ConfigLoader.cs
 │   └── PlaywrightSettings.cs
@@ -50,37 +57,38 @@ PlaywrightTests/
 ## Framework Structure
 
 ### `PlaywrightTests.csproj`
-Contains the project definition, target framework, and NuGet package references.
+Contains the project definition, target framework, and package references.
 
 ### `Config/`
-Holds the configuration layer for the framework.
+Contains the configuration layer.
 
-- `ConfigLoader.cs` loads settings from `appsettings.json` and environment variables
-- `PlaywrightSettings.cs` defines strongly typed settings models
+- `ConfigLoader.cs` loads values from `appsettings.json` and environment variables
+- `PlaywrightSettings.cs` defines the settings model used by the framework
 
 ### `Fixtures/`
-Holds the shared setup used by tests.
+Contains shared factories and fixtures.
 
-- `BrowserFixture.cs` creates and manages the Playwright browser for UI tests
-- `ApiClientFactory.cs` creates Playwright API request contexts for API tests
+- `BrowserFixture.cs` manages the browser lifecycle for UI tests
+- `ApiClientFactory.cs` creates API request contexts for API tests
 
 ### `Ui/`
-Contains UI automation code.
+Contains UI automation structure.
 
-- `Tests/` stores UI test classes
-- `Pages/` is available for page objects or other UI abstractions
+- `Tests/` contains UI test classes
+- `Pages/` is reserved for page objects and UI abstractions
 
 ### `Api/`
-Contains API automation code.
+Contains API automation structure.
 
-- `Tests/` stores API test classes
-- `Clients/` is available for API client abstractions
+- `Clients/` contains API helper classes such as `AuthApi`
+- `Models/` contains API data models such as `AuthUser`
+- `Tests/` contains API tests, currently grouped under `Auth/`
 
 ### `appsettings.json`
-Stores runtime settings for the framework, including:
+Contains runtime settings for the framework, including:
 
-- UI base URL
-- API base URL
+- `BaseUrl`
+- `ApiBaseUrl`
 - browser type
 - launch options
 - viewport settings
@@ -88,25 +96,25 @@ Stores runtime settings for the framework, including:
 
 ## Execution Flow
 
-### UI layer
+### UI flow
 
 1. settings are loaded from `appsettings.json`
 2. `BrowserFixture` starts Playwright and launches the browser
-3. tests create a browser context and page
-4. Playwright performs browser actions and assertions
+3. UI tests create a browser context and page
+4. tests run browser actions and assertions
 5. resources are disposed after execution
 
-### API layer
+### API flow
 
 1. settings are loaded from `appsettings.json`
 2. `ApiClientFactory` creates an API request context
-3. tests send HTTP requests through Playwright's API features
-4. responses are validated in xUnit tests
+3. API helpers send requests through Playwright's API layer
+4. tests validate the responses
 5. resources are disposed after execution
 
 ## Prerequisites
 
-Before running the framework, make sure you have:
+Before running the project, make sure you have:
 
 - a compatible **.NET SDK** installed for `net10.0`
 - internet access to reach the configured application URLs
