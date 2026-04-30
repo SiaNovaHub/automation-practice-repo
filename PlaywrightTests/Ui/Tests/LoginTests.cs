@@ -1,4 +1,4 @@
-using static Microsoft.Playwright.Assertions;
+﻿using static Microsoft.Playwright.Assertions;
 using PlaywrightTests.Fixtures;
 using PlaywrightTests.Ui.Helpers;
 using PlaywrightTests.Ui.Pages;
@@ -20,16 +20,24 @@ public class LoginTests(
     public async Task EmptyLogin()
     {
         await using var context = await _fixture.CreateContextAsync();
-        var page = await context.NewPageAsync();
-        var loginPage = new LoginPage(page);
 
-        // Act
-        await loginPage.NavigateAsync();
-        await loginPage.SubmitAsync();
+        try
+        {
+            var page = await context.NewPageAsync();
+            var loginPage = new LoginPage(page);
 
-        // Assert
-        await Expect(loginPage.EmailError).ToHaveTextAsync("Enter a valid email");
-        await Expect(loginPage.PasswordError).ToHaveTextAsync("Password must be at least 6 characters");
+            // Act
+            await loginPage.NavigateAsync();
+            await loginPage.SubmitAsync();
+
+            // Assert
+            await Expect(loginPage.EmailError).ToHaveTextAsync("Enter a valid email");
+            await Expect(loginPage.PasswordError).ToHaveTextAsync("Password must be at least 6 characters");
+        }
+        finally
+        {
+            await BrowserFixture.StopTracingAsync(context);
+        }
     }
 
     [Trait("Type", "Smoke")]
@@ -38,18 +46,25 @@ public class LoginTests(
     {
         await using var context = await _fixture.CreateContextAsync();
 
-        var user = await AuthHelper.RegisterUserAsync(_apiFactory);
-        var page = await context.NewPageAsync();
-        var loginPage = new LoginPage(page);
-        var navigationBar = new NavigationBar(page);
+        try
+        {
+            var user = await AuthHelper.RegisterUserAsync(_apiFactory);
+            var page = await context.NewPageAsync();
+            var loginPage = new LoginPage(page);
+            var navigationBar = new NavigationBar(page);
 
-        // Act
-        await loginPage.NavigateAsync();
-        await loginPage.LoginAsync(user.Email, user.Password);
+            // Act
+            await loginPage.NavigateAsync();
+            await loginPage.LoginAsync(user.Email, user.Password);
 
-        // Assert
-        await page.WaitForURLAsync("**/");
-        await Expect(navigationBar.UserEmail).ToHaveTextAsync(user.Email);
+            // Assert
+            await page.WaitForURLAsync("**/");
+            await Expect(navigationBar.UserEmail).ToHaveTextAsync(user.Email);
+        }
+        finally
+        {
+            await BrowserFixture.StopTracingAsync(context);
+        }
     }
 
     [Trait("Type", "Smoke")]
@@ -58,20 +73,27 @@ public class LoginTests(
     {
         await using var context = await _fixture.CreateContextAsync();
 
-        // Arrange
-        await AuthHelper.RegisterAndAuthenticateAsync(context, _apiFactory);
+        try
+        {
+            // Arrange
+            await AuthHelper.RegisterAndAuthenticateAsync(context, _apiFactory);
 
-        var page = await context.NewPageAsync();
-        var navigationBar = new NavigationBar(page);
-        var loginPage = new LoginPage(page);
+            var page = await context.NewPageAsync();
+            var navigationBar = new NavigationBar(page);
+            var loginPage = new LoginPage(page);
 
-        await page.GotoAsync("/");
+            await page.GotoAsync("/");
 
-        // Act
-        await navigationBar.LogoutAsync();
+            // Act
+            await navigationBar.LogoutAsync();
 
-        // Assert
-        await page.WaitForURLAsync("**/login");
-        await Expect(loginPage.SignInButton).ToBeVisibleAsync();
+            // Assert
+            await page.WaitForURLAsync("**/login");
+            await Expect(loginPage.SignInButton).ToBeVisibleAsync();
+        }
+        finally
+        {
+            await BrowserFixture.StopTracingAsync(context);
+        }
     }
 }

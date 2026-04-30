@@ -50,9 +50,29 @@ public class BrowserFixture : IAsyncLifetime
                 : null
         });
 
+        await context.Tracing.StartAsync(new()
+        {
+            Screenshots = true,
+            Snapshots = true,
+            Sources = true
+        });
+
         context.SetDefaultTimeout(_settings.Timeout);
 
         return context;
+    }
+
+    public static async Task StopTracingAsync(
+        IBrowserContext context,
+        [System.Runtime.CompilerServices.CallerMemberName] string testName = ""
+    )
+    {
+        Directory.CreateDirectory("traces");
+
+        await context.Tracing.StopAsync(new()
+        {
+            Path = $"traces/{testName}-{Guid.NewGuid()}.zip"
+        });
     }
 
     public async Task DisposeAsync()

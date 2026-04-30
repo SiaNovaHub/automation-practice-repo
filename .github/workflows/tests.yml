@@ -17,7 +17,8 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 10.0
+          dotnet-version: '10.0.x'
+          include-prerelease: true
 
       - name: Restore
         run: dotnet restore
@@ -32,13 +33,29 @@ jobs:
           playwright install-deps
 
       - name: Run API tests (ALL)
-        run: dotnet test --filter "Layer=API" --logger "trx"
+        run: ./scripts/ci/test-api.sh
 
       - name: Upload API results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: api-test-results
           path: '**/TestResults/*.trx'
+
+      - name: Publish API test results
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: API Tests
+          path: '**/TestResults/*.trx'
+          reporter: dotnet-trx
+      
+      - name: Upload Playwright traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-traces
+          path: '**/*.log'
 
 
   ui-smoke:
@@ -52,7 +69,8 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 10.0
+          dotnet-version: '10.0.x'
+          include-prerelease: true
 
       - name: Restore
         run: dotnet restore
@@ -67,10 +85,26 @@ jobs:
           playwright install-deps
 
       - name: Run UI smoke tests
-        run: dotnet test --filter "Layer=UI&Type=Smoke" --logger "trx"
+        run: ./scripts/ci/test-ui-smoke.sh
 
       - name: Upload UI results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ui-test-results
           path: '**/TestResults/*.trx'
+
+      - name: Publish UI test results
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: UI Smoke Tests
+          path: '**/TestResults/*.trx'
+          reporter: dotnet-trx
+
+      - name: Upload Playwright traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-traces
+          path: '**/traces/*.zip'
