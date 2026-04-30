@@ -4,6 +4,10 @@ on:
   push:
     branches: [ main ]
 
+permissions:
+  checks: write
+  contents: read
+
 jobs:
 
   api-tests:
@@ -44,6 +48,7 @@ jobs:
 
       - name: Publish API test results
         if: always()
+        continue-on-error: true
         uses: dorny/test-reporter@v1
         with:
           name: API Tests
@@ -109,6 +114,7 @@ jobs:
 
       - name: Publish UI test results
         if: always()
+        continue-on-error: true
         uses: dorny/test-reporter@v1
         with:
           name: UI Smoke Tests
