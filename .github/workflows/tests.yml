@@ -26,16 +26,16 @@ jobs:
       - name: Build
         run: dotnet build --no-restore
 
-      - name: Install Playwright
-        run: |
-          dotnet tool install --global Microsoft.Playwright.CLI
-          playwright install
-          playwright install-deps
-
       - name: Run API tests (ALL)
         run: bash ./scripts/ci/test-api.sh
 
-      - name: Upload API results
+      - name: Generate API HTML report
+        if: always()
+        run: |
+          dotnet tool install -g dotnet-reportgenerator-globaltool
+          reportgenerator -reports:**/*.trx -targetdir:report-api -reporttypes:Html
+
+      - name: Upload API TRX results
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -49,13 +49,20 @@ jobs:
           name: API Tests
           path: '**/TestResults/*.trx'
           reporter: dotnet-trx
-      
-      - name: Upload Playwright traces
+
+      - name: Upload API HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-html-report
+          path: report-api
+
+      - name: Upload API traces (if failed)
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: api-traces
-          path: '**/*.log'
+          path: '**/traces/*.zip'
 
 
   ui-smoke:
@@ -87,7 +94,13 @@ jobs:
       - name: Run UI smoke tests
         run: bash ./scripts/ci/test-ui-smoke.sh
 
-      - name: Upload UI results
+      - name: Generate UI HTML report
+        if: always()
+        run: |
+          dotnet tool install -g dotnet-reportgenerator-globaltool
+          reportgenerator -reports:**/*.trx -targetdir:report-ui -reporttypes:Html
+
+      - name: Upload UI TRX results
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -102,7 +115,14 @@ jobs:
           path: '**/TestResults/*.trx'
           reporter: dotnet-trx
 
-      - name: Upload Playwright traces
+      - name: Upload UI HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-html-report
+          path: report-ui
+
+      - name: Upload UI traces (if failed)
         if: failure()
         uses: actions/upload-artifact@v4
         with:
