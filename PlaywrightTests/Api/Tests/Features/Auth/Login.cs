@@ -2,6 +2,8 @@
 
 namespace PlaywrightTests.Api.Tests.Features.Auth;
 
+[Trait("Layer", "API")]
+[Trait("Feature", "Auth")]
 public class LoginTests(ApiClientFactory factory) : IClassFixture<ApiClientFactory>
 {
     private readonly ApiClientFactory _factory = factory;
@@ -12,6 +14,7 @@ public class LoginTests(ApiClientFactory factory) : IClassFixture<ApiClientFacto
         return new AuthTestContext(request);
     }
 
+    [Trait("Type", "Smoke")]
     [Fact]
     public async Task Login_WithValidCredentials_ReturnsValidToken()
     {
@@ -30,6 +33,7 @@ public class LoginTests(ApiClientFactory factory) : IClassFixture<ApiClientFacto
         Assert.False(string.IsNullOrEmpty(token));
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task Login_WithWrongPassword_Returns400()
     {
@@ -57,6 +61,7 @@ public class LoginTests(ApiClientFactory factory) : IClassFixture<ApiClientFacto
         Assert.Equal(0, root.GetProperty("details").GetArrayLength());
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task Login_WithUnknownEmail_Returns404()
     {
@@ -79,6 +84,7 @@ public class LoginTests(ApiClientFactory factory) : IClassFixture<ApiClientFacto
         Assert.Equal("User not found", root.GetProperty("error").GetString());
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task Login_WithEmptyEmail_Returns400()
     {

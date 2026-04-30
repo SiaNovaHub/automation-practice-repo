@@ -1,4 +1,3 @@
-using Microsoft.Playwright;
 using static Microsoft.Playwright.Assertions;
 using PlaywrightTests.Fixtures;
 using PlaywrightTests.Ui.Helpers;
@@ -6,6 +5,8 @@ using PlaywrightTests.Ui.Pages;
 
 namespace PlaywrightTests.Ui.Tests;
 
+[Trait("Layer", "UI")]
+[Trait("Feature", "Bookings")]
 public class BookingTests(
     BrowserFixture fixture,
     ApiClientFactory apiFactory
@@ -14,6 +15,7 @@ public class BookingTests(
     private readonly BrowserFixture _fixture = fixture;
     private readonly ApiClientFactory _apiFactory = apiFactory;
 
+    [Trait("Type", "Smoke")]
     [Fact]
     public async Task CreateBookingFromEventDetails_ShowsBookingConfirmation()
     {
@@ -35,6 +37,7 @@ public class BookingTests(
         Assert.False(string.IsNullOrEmpty(await eventDetailsPage.GetBookingReferenceAsync()));
     }
 
+    [Trait("Type", "Smoke")]
     [Fact]
     public async Task SeededBookingAppearsInMyBookings()
     {
@@ -56,6 +59,7 @@ public class BookingTests(
         await Expect(myBookingsPage.GetBookingCard(eventInput.Title)).ToContainTextAsync(createdBooking.BookingRef);
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task CreatingBookingDecreasesAvailableSeatsAfterReload()
     {
@@ -80,6 +84,7 @@ public class BookingTests(
         Assert.Equal(eventInput.TotalSeats - 2, updatedAvailableSeats);
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task CancellingBookingRestoresAvailableSeats()
     {

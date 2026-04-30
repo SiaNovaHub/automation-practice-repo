@@ -5,6 +5,8 @@ using PlaywrightTests.Ui.Pages;
 
 namespace PlaywrightTests.Ui.Tests;
 
+[Trait("Layer", "UI")]
+[Trait("Feature", "Auth")]
 public class LoginTests(
     BrowserFixture fixture,
     ApiClientFactory apiFactory
@@ -13,6 +15,7 @@ public class LoginTests(
     private readonly BrowserFixture _fixture = fixture;
     private readonly ApiClientFactory _apiFactory = apiFactory;
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task EmptyLogin()
     {
@@ -29,6 +32,7 @@ public class LoginTests(
         await Expect(loginPage.PasswordError).ToHaveTextAsync("Password must be at least 6 characters");
     }
 
+    [Trait("Type", "Smoke")]
     [Fact]
     public async Task ValidLogin()
     {
@@ -48,6 +52,7 @@ public class LoginTests(
         await Expect(navigationBar.UserEmail).ToHaveTextAsync(user.Email);
     }
 
+    [Trait("Type", "Smoke")]
     [Fact]
     public async Task Logout()
     {

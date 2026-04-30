@@ -5,6 +5,8 @@ using PlaywrightTests.Api.Tests.Infrastructure.Builders;
 
 namespace PlaywrightTests.Api.Tests.Features.Events;
 
+[Trait("Layer", "API")]
+[Trait("Feature", "Events")]
 public class EventsTests(ApiClientFactory factory) : IClassFixture<ApiClientFactory>
 {
     private readonly ApiClientFactory _factory = factory;
@@ -15,6 +17,7 @@ public class EventsTests(ApiClientFactory factory) : IClassFixture<ApiClientFact
         return new EventTestContext(request);
     }
 
+    [Trait("Type", "Smoke")]
     [Fact]
     public async Task ListEvents_Returns200()
     {
@@ -42,6 +45,7 @@ public class EventsTests(ApiClientFactory factory) : IClassFixture<ApiClientFact
         }
     }
 
+    [Trait("Type", "Smoke")]
     [Fact]
     public async Task CreateEvent_WithValidData_Returns201()
     {
@@ -56,6 +60,7 @@ public class EventsTests(ApiClientFactory factory) : IClassFixture<ApiClientFact
         Assert.Equal(201, response.Status);
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task CreateEvent_WithValidData_ReturnsValidResponseStructure()
     {
@@ -72,6 +77,7 @@ public class EventsTests(ApiClientFactory factory) : IClassFixture<ApiClientFact
         Assert.NotNull(response.Data);
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task CreateEvent_WithValidData_ReturnsValidResponseData()
     {
@@ -88,6 +94,7 @@ public class EventsTests(ApiClientFactory factory) : IClassFixture<ApiClientFact
         Assert.Equal(input.TotalSeats, response.Data.AvailableSeats);
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task CreateEvent_WithMissingTitle_Returns400()
     {
@@ -112,6 +119,7 @@ public class EventsTests(ApiClientFactory factory) : IClassFixture<ApiClientFact
         Assert.Equal("Title is required", error.GetProperty("message").GetString());
     }
 
+    [Trait("Type", "Smoke")]
     [Fact]
     public async Task GetEventById_WithExistingId_Returns200()
     {
@@ -142,6 +150,7 @@ public class EventsTests(ApiClientFactory factory) : IClassFixture<ApiClientFact
         }
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task GetEventById_WithUnknownId_Returns404()
     {
@@ -162,6 +171,7 @@ public class EventsTests(ApiClientFactory factory) : IClassFixture<ApiClientFact
         Assert.Equal($"Event with id {eventId} not found", root.GetProperty("error").GetString());
     }
 
+    [Trait("Type", "Smoke")]
     [Fact]
     public async Task UpdateEvent_WithValidData_Returns200()
     {
@@ -197,6 +207,7 @@ public class EventsTests(ApiClientFactory factory) : IClassFixture<ApiClientFact
         }
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task UpdateEvent_WithUnknownId_Returns404()
     {
@@ -218,6 +229,7 @@ public class EventsTests(ApiClientFactory factory) : IClassFixture<ApiClientFact
         Assert.Equal($"Event with id {eventId} not found", root.GetProperty("error").GetString());
     }
 
+    [Trait("Type", "Smoke")]
     [Fact]
     public async Task DeleteEvent_WithExistingId_Returns200()
     {
@@ -239,6 +251,7 @@ public class EventsTests(ApiClientFactory factory) : IClassFixture<ApiClientFact
         Assert.Equal("Event deleted successfully", root.GetProperty("message").GetString());
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task DeleteEvent_WithUnknownId_Returns404()
     {

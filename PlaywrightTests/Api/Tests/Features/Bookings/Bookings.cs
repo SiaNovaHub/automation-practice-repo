@@ -8,6 +8,8 @@ using PlaywrightTests.Api.Tests.Infrastructure.Builders;
 
 namespace PlaywrightTests.Api.Tests.Features.Bookings;
 
+[Trait("Layer", "API")]
+[Trait("Feature", "Bookings")]
 public class BookingsTests(ApiClientFactory factory) : IClassFixture<ApiClientFactory>
 {
     private readonly ApiClientFactory _factory = factory;
@@ -32,6 +34,7 @@ public class BookingsTests(ApiClientFactory factory) : IClassFixture<ApiClientFa
         return false;
     }
 
+    [Trait("Type", "Smoke")]
     [Fact]
     public async Task ListBookings_Returns200()
     {
@@ -45,6 +48,7 @@ public class BookingsTests(ApiClientFactory factory) : IClassFixture<ApiClientFa
         Assert.Equal(200, response.Status);
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task ListBookings_ReturnsPaginatedCollection()
     {
@@ -61,6 +65,7 @@ public class BookingsTests(ApiClientFactory factory) : IClassFixture<ApiClientFa
         Assert.True(response.Pagination.Limit >= 1);
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task ListBookings_FilteredByEventId_ReturnsMatchingBookings()
     {
@@ -97,6 +102,7 @@ public class BookingsTests(ApiClientFactory factory) : IClassFixture<ApiClientFa
         }
     }
 
+    [Trait("Type", "Smoke")]
     [Fact]
     public async Task CreateBooking_WithValidData_Returns201()
     {
@@ -132,6 +138,7 @@ public class BookingsTests(ApiClientFactory factory) : IClassFixture<ApiClientFa
         }
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task CreateBooking_WithValidData_ReturnsExpectedContract()
     {
@@ -169,6 +176,7 @@ public class BookingsTests(ApiClientFactory factory) : IClassFixture<ApiClientFa
         }
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task CreateBooking_WithValidData_ReturnsCalculatedDataAndUpdatesSeats()
     {
@@ -210,6 +218,7 @@ public class BookingsTests(ApiClientFactory factory) : IClassFixture<ApiClientFa
         }
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task CreateBooking_WithInvalidData_Returns400()
     {
@@ -250,6 +259,7 @@ public class BookingsTests(ApiClientFactory factory) : IClassFixture<ApiClientFa
         }
     }
 
+    [Trait("Type", "Smoke")]
     [Fact]
     public async Task GetBookingById_WithExistingId_ReturnsExpectedBooking()
     {
@@ -288,6 +298,7 @@ public class BookingsTests(ApiClientFactory factory) : IClassFixture<ApiClientFa
         }
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task GetBookingById_WithUnknownId_Returns404()
     {
@@ -306,6 +317,7 @@ public class BookingsTests(ApiClientFactory factory) : IClassFixture<ApiClientFa
         Assert.Equal($"Booking with id {bookingId} not found", root.GetProperty("error").GetString());
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task GetBookingByReference_WithExistingReference_ReturnsExpectedBooking()
     {
@@ -344,6 +356,7 @@ public class BookingsTests(ApiClientFactory factory) : IClassFixture<ApiClientFa
         }
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task GetBookingByReference_WithUnknownReference_Returns404()
     {
@@ -362,6 +375,7 @@ public class BookingsTests(ApiClientFactory factory) : IClassFixture<ApiClientFa
         Assert.Equal($"Booking with reference \"{reference}\" not found", root.GetProperty("error").GetString());
     }
 
+    [Trait("Type", "Smoke")]
     [Fact]
     public async Task DeleteBooking_WithExistingId_Returns200AndRestoresSeats()
     {
@@ -407,6 +421,7 @@ public class BookingsTests(ApiClientFactory factory) : IClassFixture<ApiClientFa
         }
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task DeleteBooking_WithUnknownId_Returns404()
     {

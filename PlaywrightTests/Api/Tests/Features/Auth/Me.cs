@@ -2,6 +2,8 @@ using PlaywrightTests.Api.Tests.Infrastructure.Contexts;
 
 namespace PlaywrightTests.Api.Tests.Features.Auth;
 
+[Trait("Layer", "API")]
+[Trait("Feature", "Auth")]
 public class MeTests(ApiClientFactory factory) : IClassFixture<ApiClientFactory>
 {
     private readonly ApiClientFactory _factory = factory;
@@ -12,6 +14,7 @@ public class MeTests(ApiClientFactory factory) : IClassFixture<ApiClientFactory>
         return new AuthTestContext(request);
     }
 
+    [Trait("Type", "Smoke")]
     [Fact]
     public async Task GetCurrentUser_WithValidToken_Returns200()
     {
@@ -39,6 +42,7 @@ public class MeTests(ApiClientFactory factory) : IClassFixture<ApiClientFactory>
         Assert.Equal(email, currentUser.GetProperty("email").GetString());
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task GetCurrentUser_WithoutToken_Returns401()
     {
@@ -58,6 +62,7 @@ public class MeTests(ApiClientFactory factory) : IClassFixture<ApiClientFactory>
         Assert.Equal("Unauthorized", root.GetProperty("error").GetString());
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task GetCurrentUser_WithInvalidToken_Returns401()
     {

@@ -2,6 +2,8 @@ using PlaywrightTests.Api.Tests.Infrastructure.Contexts;
 
 namespace PlaywrightTests.Api.Tests.Features.Auth;
 
+[Trait("Layer", "API")]
+[Trait("Feature", "Auth")]
 public class RegisterTests(ApiClientFactory factory) : IClassFixture<ApiClientFactory>
 {
     private readonly ApiClientFactory _factory = factory;
@@ -11,6 +13,7 @@ public class RegisterTests(ApiClientFactory factory) : IClassFixture<ApiClientFa
         return new AuthTestContext(request);
     }
 
+    [Trait("Type", "Smoke")]
     [Fact]
     public async Task Register_WithValidData_ReturnsCreatedUser()
     {
@@ -28,6 +31,7 @@ public class RegisterTests(ApiClientFactory factory) : IClassFixture<ApiClientFa
         Assert.False(string.IsNullOrEmpty(user.Token));
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task Register_WithEmptyEmail_Returns400()
     {
@@ -53,6 +57,7 @@ public class RegisterTests(ApiClientFactory factory) : IClassFixture<ApiClientFa
         Assert.Equal("A valid email is required", error.GetProperty("message").GetString());
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task Register_WithInvalidEmail_Returns400()
     {
@@ -78,6 +83,7 @@ public class RegisterTests(ApiClientFactory factory) : IClassFixture<ApiClientFa
         Assert.Equal("A valid email is required", error.GetProperty("message").GetString());
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task Register_WithShortPassword_Returns400()
     {
@@ -103,6 +109,7 @@ public class RegisterTests(ApiClientFactory factory) : IClassFixture<ApiClientFa
         Assert.Equal("Password must be at least 6 characters", error.GetProperty("message").GetString());
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task Register_WithExistingEmail_Returns400()
     {

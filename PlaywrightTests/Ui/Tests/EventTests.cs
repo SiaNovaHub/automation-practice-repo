@@ -1,4 +1,3 @@
-using Microsoft.Playwright;
 using static Microsoft.Playwright.Assertions;
 using PlaywrightTests.Fixtures;
 using PlaywrightTests.Ui.Helpers;
@@ -6,6 +5,8 @@ using PlaywrightTests.Ui.Pages;
 
 namespace PlaywrightTests.Ui.Tests;
 
+[Trait("Layer", "UI")]
+[Trait("Feature", "Events")]
 public class EventTests(
     BrowserFixture fixture,
     ApiClientFactory apiFactory
@@ -14,6 +15,7 @@ public class EventTests(
     private readonly BrowserFixture _fixture = fixture;
     private readonly ApiClientFactory _apiFactory = apiFactory;
 
+    [Trait("Type", "Smoke")]
     [Fact]
     public async Task SeededEventAppearsInEventsList()
     {
@@ -33,6 +35,7 @@ public class EventTests(
         await Expect(eventsPage.GetEventCard(eventInput.Title)).ToBeVisibleAsync();
     }
 
+    [Trait("Type", "Regression")]
     [Fact]
     public async Task SeededEventDetailsShowEventData()
     {
@@ -56,6 +59,7 @@ public class EventTests(
         Assert.Equal(eventInput.TotalSeats, await eventDetailsPage.GetTotalSeatsAsync());
     }
 
+    [Trait("Type", "Smoke")]
     [Fact]
     public async Task CreateEventFromAdmin_ShowsNewEventInManageEventsTable()
     {
