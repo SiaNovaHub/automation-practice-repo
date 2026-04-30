@@ -7,93 +7,70 @@ namespace PlaywrightTests.Ui.Tests;
 
 [Trait("Layer", "UI")]
 [Trait("Feature", "Auth")]
-public class LoginTests(
-    BrowserFixture fixture,
-    ApiClientFactory apiFactory
-    ) : IClassFixture<BrowserFixture>, IClassFixture<ApiClientFactory>
+[Collection("UI collection")]
+public class LoginTests : UiBaseTest
 {
-    private readonly BrowserFixture _fixture = fixture;
-    private readonly ApiClientFactory _apiFactory = apiFactory;
+    public LoginTests(BrowserFixture fixture, ApiClientFactory apiClientFactory)
+        : base(fixture, apiClientFactory)
+    {
+    }
 
     [Trait("Type", "Regression")]
     [Fact]
     public async Task EmptyLogin()
     {
-        await using var context = await _fixture.CreateContextAsync();
+        var context = Context;
+        var page = await context.NewPageAsync();
+        var loginPage = new LoginPage(page);
 
-        try
-        {
-            var page = await context.NewPageAsync();
-            var loginPage = new LoginPage(page);
+        // Act
+        await loginPage.NavigateAsync();
+        await loginPage.SubmitAsync();
 
-            // Act
-            await loginPage.NavigateAsync();
-            await loginPage.SubmitAsync();
-
-            // Assert
-            await Expect(loginPage.EmailError).ToHaveTextAsync("Enter a valid email");
-            await Expect(loginPage.PasswordError).ToHaveTextAsync("Password must be at least 6 characters");
-        }
-        finally
-        {
-            await BrowserFixture.StopTracingAsync(context);
-        }
+        // Assert
+        await Expect(loginPage.EmailError).ToHaveTextAsync("Enter a valid email");
+        await Expect(loginPage.PasswordError).ToHaveTextAsync("Password must be at least 6 characters");
     }
 
     [Trait("Type", "Smoke")]
     [Fact]
     public async Task ValidLogin()
     {
-        await using var context = await _fixture.CreateContextAsync();
+        var context = Context;
+        var user = await AuthHelper.RegisterUserAsync(ApiClientFactory);
+        var page = await context.NewPageAsync();
+        var loginPage = new LoginPage(page);
+        var navigationBar = new NavigationBar(page);
 
-        try
-        {
-            var user = await AuthHelper.RegisterUserAsync(_apiFactory);
-            var page = await context.NewPageAsync();
-            var loginPage = new LoginPage(page);
-            var navigationBar = new NavigationBar(page);
+        // Act
+        await loginPage.NavigateAsync();
+        await loginPage.LoginAsync(user.Email, user.Password);
 
-            // Act
-            await loginPage.NavigateAsync();
-            await loginPage.LoginAsync(user.Email, user.Password);
-
-            // Assert
-            await page.WaitForURLAsync("**/");
-            await Expect(navigationBar.UserEmail).ToHaveTextAsync(user.Email);
-        }
-        finally
-        {
-            await BrowserFixture.StopTracingAsync(context);
-        }
+        // Assert
+        await page.WaitForURLAsync("**/");
+        await Expect(navigationBar.UserEmail).ToHaveTextAsync(user.Email);
     }
 
     [Trait("Type", "Smoke")]
     [Fact]
     public async Task Logout()
     {
-        await using var context = await _fixture.CreateContextAsync();
+        var context = Context;
 
-        try
-        {
-            // Arrange
-            await AuthHelper.RegisterAndAuthenticateAsync(context, _apiFactory);
+        // Arrange
+        await AuthHelper.RegisterAndAuthenticateAsync(context, ApiClientFactory);
 
-            var page = await context.NewPageAsync();
-            var navigationBar = new NavigationBar(page);
-            var loginPage = new LoginPage(page);
+        var page = await context.NewPageAsync();
+        var navigationBar = new NavigationBar(page);
+        var loginPage = new LoginPage(page);
 
-            await page.GotoAsync("/");
+        await page.GotoAsync("/");
 
-            // Act
-            await navigationBar.LogoutAsync();
+        // Act
+        await navigationBar.LogoutAsync();
 
-            // Assert
-            await page.WaitForURLAsync("**/login");
-            await Expect(loginPage.SignInButton).ToBeVisibleAsync();
-        }
-        finally
-        {
-            await BrowserFixture.StopTracingAsync(context);
-        }
+        // Assert
+        await page.WaitForURLAsync("**/login");
+        await Expect(loginPage.SignInButton).ToBeVisibleAsync();
     }
 }

@@ -33,7 +33,7 @@ jobs:
           playwright install-deps
 
       - name: Run API tests (ALL)
-        run: ./scripts/ci/test-api.sh
+        run: bash ./scripts/ci/test-api.sh
 
       - name: Upload API results
         if: always()
@@ -85,7 +85,7 @@ jobs:
           playwright install-deps
 
       - name: Run UI smoke tests
-        run: ./scripts/ci/test-ui-smoke.sh
+        run: bash ./scripts/ci/test-ui-smoke.sh
 
       - name: Upload UI results
         if: always()

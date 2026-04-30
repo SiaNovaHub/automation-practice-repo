@@ -7,136 +7,104 @@ namespace PlaywrightTests.Ui.Tests;
 
 [Trait("Layer", "UI")]
 [Trait("Feature", "Bookings")]
-public class BookingTests(
-    BrowserFixture fixture,
-    ApiClientFactory apiFactory
-    ) : IClassFixture<BrowserFixture>, IClassFixture<ApiClientFactory>
+[Collection("UI collection")]
+public class BookingTests : UiBaseTest
 {
-    private readonly BrowserFixture _fixture = fixture;
-    private readonly ApiClientFactory _apiFactory = apiFactory;
+    public BookingTests(BrowserFixture fixture, ApiClientFactory apiClientFactory)
+        : base(fixture, apiClientFactory)
+    {
+    }
 
     [Trait("Type", "Smoke")]
     [Fact]
     public async Task CreateBookingFromEventDetails_ShowsBookingConfirmation()
     {
-        await using var context = await _fixture.CreateContextAsync();
+        var context = Context;
+        var user = await AuthHelper.RegisterAndAuthenticateAsync(context, ApiClientFactory);
+        var eventInput = EventSetupHelper.BuildEvent();
+        var createdEvent = await EventSetupHelper.CreateEventAsync(ApiClientFactory, user.Token, eventInput);
 
-        try
-        {
-            var user = await AuthHelper.RegisterAndAuthenticateAsync(context, _apiFactory);
-            var eventInput = EventSetupHelper.BuildEvent();
-            var createdEvent = await EventSetupHelper.CreateEventAsync(_apiFactory, user.Token, eventInput);
+        var page = await context.NewPageAsync();
+        var eventDetailsPage = new EventDetailsPage(page);
 
-            var page = await context.NewPageAsync();
-            var eventDetailsPage = new EventDetailsPage(page);
+        // Act
+        await eventDetailsPage.NavigateAsync(createdEvent.Id);
+        await eventDetailsPage.BookTicketsAsync("John Doe", "john.doe@email.com", "+91-9876543210");
 
-            // Act
-            await eventDetailsPage.NavigateAsync(createdEvent.Id);
-            await eventDetailsPage.BookTicketsAsync("John Doe", "john.doe@email.com", "+91-9876543210");
-
-            // Assert
-            await Expect(eventDetailsPage.BookingConfirmedHeading).ToBeVisibleAsync();
-            Assert.False(string.IsNullOrEmpty(await eventDetailsPage.GetBookingReferenceAsync()));
-        }
-        finally
-        {
-            await BrowserFixture.StopTracingAsync(context);
-        }
+        // Assert
+        await Expect(eventDetailsPage.BookingConfirmedHeading).ToBeVisibleAsync();
+        Assert.False(string.IsNullOrEmpty(await eventDetailsPage.GetBookingReferenceAsync()));
     }
 
     [Trait("Type", "Smoke")]
     [Fact]
     public async Task SeededBookingAppearsInMyBookings()
     {
-        await using var context = await _fixture.CreateContextAsync();
+        var context = Context;
+        var user = await AuthHelper.RegisterAndAuthenticateAsync(context, ApiClientFactory);
+        var eventInput = EventSetupHelper.BuildEvent();
+        var createdEvent = await EventSetupHelper.CreateEventAsync(ApiClientFactory, user.Token, eventInput);
+        var createdBooking = await BookingSetupHelper.CreateBookingAsync(ApiClientFactory, user.Token, BookingSetupHelper.BuildBooking(createdEvent.Id));
 
-        try
-        {
-            var user = await AuthHelper.RegisterAndAuthenticateAsync(context, _apiFactory);
-            var eventInput = EventSetupHelper.BuildEvent();
-            var createdEvent = await EventSetupHelper.CreateEventAsync(_apiFactory, user.Token, eventInput);
-            var createdBooking = await BookingSetupHelper.CreateBookingAsync(_apiFactory, user.Token, BookingSetupHelper.BuildBooking(createdEvent.Id));
+        var page = await context.NewPageAsync();
+        var myBookingsPage = new MyBookingsPage(page);
 
-            var page = await context.NewPageAsync();
-            var myBookingsPage = new MyBookingsPage(page);
+        // Act
+        await myBookingsPage.NavigateAsync();
 
-            // Act
-            await myBookingsPage.NavigateAsync();
-
-            // Assert
-            await Expect(myBookingsPage.GetBookingCard(eventInput.Title)).ToBeVisibleAsync();
-            await Expect(myBookingsPage.GetBookingCard(eventInput.Title)).ToContainTextAsync(createdBooking.BookingRef);
-        }
-        finally
-        {
-            await BrowserFixture.StopTracingAsync(context);
-        }
+        // Assert
+        await Expect(myBookingsPage.GetBookingCard(eventInput.Title)).ToBeVisibleAsync();
+        await Expect(myBookingsPage.GetBookingCard(eventInput.Title)).ToContainTextAsync(createdBooking.BookingRef);
     }
 
     [Trait("Type", "Regression")]
     [Fact]
     public async Task CreatingBookingDecreasesAvailableSeatsAfterReload()
     {
-        await using var context = await _fixture.CreateContextAsync();
+        var context = Context;
+        var user = await AuthHelper.RegisterAndAuthenticateAsync(context, ApiClientFactory);
+        var eventInput = EventSetupHelper.BuildEvent(totalSeats: 20, price: 1200);
+        var createdEvent = await EventSetupHelper.CreateEventAsync(ApiClientFactory, user.Token, eventInput);
 
-        try
-        {
-            var user = await AuthHelper.RegisterAndAuthenticateAsync(context, _apiFactory);
-            var eventInput = EventSetupHelper.BuildEvent(totalSeats: 20, price: 1200);
-            var createdEvent = await EventSetupHelper.CreateEventAsync(_apiFactory, user.Token, eventInput);
+        var page = await context.NewPageAsync();
+        var eventDetailsPage = new EventDetailsPage(page);
 
-            var page = await context.NewPageAsync();
-            var eventDetailsPage = new EventDetailsPage(page);
+        // Act
+        await eventDetailsPage.NavigateAsync(createdEvent.Id);
+        var initialAvailableSeats = await eventDetailsPage.GetAvailableSeatsAsync();
+        await eventDetailsPage.BookTicketsAsync("Priya Sharma", "priya.sharma@email.com", "+91-9876543210", quantity: 2);
+        await eventDetailsPage.ReloadAsync();
+        var updatedAvailableSeats = await eventDetailsPage.GetAvailableSeatsAsync();
 
-            // Act
-            await eventDetailsPage.NavigateAsync(createdEvent.Id);
-            var initialAvailableSeats = await eventDetailsPage.GetAvailableSeatsAsync();
-            await eventDetailsPage.BookTicketsAsync("Priya Sharma", "priya.sharma@email.com", "+91-9876543210", quantity: 2);
-            await eventDetailsPage.ReloadAsync();
-            var updatedAvailableSeats = await eventDetailsPage.GetAvailableSeatsAsync();
-
-            // Assert
-            Assert.Equal(eventInput.TotalSeats, initialAvailableSeats);
-            Assert.Equal(eventInput.TotalSeats - 2, updatedAvailableSeats);
-        }
-        finally
-        {
-            await BrowserFixture.StopTracingAsync(context);
-        }
+        // Assert
+        Assert.Equal(eventInput.TotalSeats, initialAvailableSeats);
+        Assert.Equal(eventInput.TotalSeats - 2, updatedAvailableSeats);
     }
 
     [Trait("Type", "Regression")]
     [Fact]
     public async Task CancellingBookingRestoresAvailableSeats()
     {
-        await using var context = await _fixture.CreateContextAsync();
+        var context = Context;
+        var user = await AuthHelper.RegisterAndAuthenticateAsync(context, ApiClientFactory);
+        var eventInput = EventSetupHelper.BuildEvent(totalSeats: 20, price: 1200);
+        var createdEvent = await EventSetupHelper.CreateEventAsync(ApiClientFactory, user.Token, eventInput);
+        var createdBooking = await BookingSetupHelper.CreateBookingAsync(ApiClientFactory, user.Token, BookingSetupHelper.BuildBooking(createdEvent.Id, quantity: 2));
 
-        try
-        {
-            var user = await AuthHelper.RegisterAndAuthenticateAsync(context, _apiFactory);
-            var eventInput = EventSetupHelper.BuildEvent(totalSeats: 20, price: 1200);
-            var createdEvent = await EventSetupHelper.CreateEventAsync(_apiFactory, user.Token, eventInput);
-            var createdBooking = await BookingSetupHelper.CreateBookingAsync(_apiFactory, user.Token, BookingSetupHelper.BuildBooking(createdEvent.Id, quantity: 2));
+        var page = await context.NewPageAsync();
+        var myBookingsPage = new MyBookingsPage(page);
+        var eventDetailsPage = new EventDetailsPage(page);
 
-            var page = await context.NewPageAsync();
-            var myBookingsPage = new MyBookingsPage(page);
-            var eventDetailsPage = new EventDetailsPage(page);
+        // Act
+        await myBookingsPage.NavigateAsync();
+        await myBookingsPage.CancelBookingAsync(eventInput.Title);
 
-            // Act
-            await myBookingsPage.NavigateAsync();
-            await myBookingsPage.CancelBookingAsync(eventInput.Title);
+        // Assert bookings page
+        await Expect(myBookingsPage.GetBookingCard(eventInput.Title)).ToHaveCountAsync(0);
 
-            // Assert bookings page
-            await Expect(myBookingsPage.GetBookingCard(eventInput.Title)).ToHaveCountAsync(0);
-
-            // Assert event details page
-            await eventDetailsPage.NavigateAsync(createdEvent.Id);
-            Assert.Equal(eventInput.TotalSeats, await eventDetailsPage.GetAvailableSeatsAsync());
-            Assert.False(string.IsNullOrEmpty(createdBooking.BookingRef));
-        }
-        finally
-        {
-            await BrowserFixture.StopTracingAsync(context);
-        }
+        // Assert event details page
+        await eventDetailsPage.NavigateAsync(createdEvent.Id);
+        Assert.Equal(eventInput.TotalSeats, await eventDetailsPage.GetAvailableSeatsAsync());
+        Assert.False(string.IsNullOrEmpty(createdBooking.BookingRef));
     }
 }

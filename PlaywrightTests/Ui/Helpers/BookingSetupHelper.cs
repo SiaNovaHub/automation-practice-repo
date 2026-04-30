@@ -1,5 +1,6 @@
 using PlaywrightTests.Api.Clients;
 using PlaywrightTests.Api.Models.Requests;
+using PlaywrightTests.Fixtures;
 
 namespace PlaywrightTests.Ui.Helpers;
 

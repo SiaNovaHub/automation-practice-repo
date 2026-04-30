@@ -2,31 +2,51 @@
 
 **Creator:** Anastasiia Zelenova
 
-This repository contains a .NET automation framework built with **xUnit** and **Microsoft Playwright**.
+This repository contains a .NET automation framework for an event booking application, built with **xUnit** and **Microsoft Playwright**.
 
-## Overview
+It is designed to demonstrate an interview-ready automation architecture with:
+- **UI and API coverage in one solution**
+- **clear separation of responsibilities**
+- **reusable fixtures, builders, and helpers**
+- **maintainable Playwright page objects**
+- **tag-based execution for smoke and regression coverage**
+- **GitHub Actions CI integration** for automated execution on repository pushes
 
-The solution contains a single test project: `PlaywrightTests`.
+---
 
-The framework is organized into:
+## What This Project Demonstrates
 
-- **Ui/** for UI automation
-- **Api/** for API automation
-- **Fixtures/** for shared setup
-- **Config/** for runtime configuration
+This framework showcases several practical automation design choices:
 
-Main technologies:
+- **UI automation** using Playwright and the Page Object Model
+- **API automation** using typed request/response models and reusable API clients
+- **shared fixtures** for browser and API request lifecycle management
+- **API-backed setup for UI tests**, which keeps UI scenarios faster and more deterministic
+- **feature-based test organization** for both UI and API layers
+- **test tagging** using `Layer`, `Feature`, and `Type`
+- **per-test isolation** to reduce test interdependence and flakiness
 
-- **.NET** (`net10.0`)
-- **xUnit**
-- **Microsoft.Playwright.Xunit**
-- **Microsoft.Extensions.Configuration**
+---
+
+## Tech Stack
+
+- **.NET** `net10.0`
+- **xUnit** `2.9.3`
+- **Microsoft.Playwright.Xunit** `1.59.0`
+- **Microsoft.NET.Test.Sdk** `17.14.1`
+- **Microsoft.Extensions.Configuration** `10.0.7`
+- **coverlet.collector** `6.0.4`
+
+---
 
 ## Repository Structure
 
 ```text
 automation-practice-repo.sln
 README.md
+.github/
+└── workflows/
+    └── tests.yml
 PlaywrightTests/
 ├── PlaywrightTests.csproj
 ├── appsettings.json
@@ -76,7 +96,9 @@ PlaywrightTests/
 │   └── PlaywrightSettings.cs
 ├── Fixtures/
 │   ├── ApiClientFactory.cs
-│   └── BrowserFixture.cs
+│   ├── BrowserFixture.cs
+│   ├── Collections.cs
+│   └── UiBaseTest.cs
 ├── Ui/
 │   ├── Helpers/
 │   │   ├── AuthHelper.cs
@@ -94,74 +116,101 @@ PlaywrightTests/
 │       ├── BookingTests.cs
 │       ├── EventTests.cs
 │       └── LoginTests.cs
-├── bin/
-└── obj/
+└── TestResults/  (generated)
 ```
 
-## Framework Structure
+---
 
-### `PlaywrightTests.csproj`
-Contains the project definition, target framework, and package references.
+## Framework Architecture
 
-### `Config/`
-Contains the configuration layer.
+## 1. Configuration Layer
+
+The configuration layer lives in `Config/`.
 
 - `ConfigLoader.cs` loads values from `appsettings.json` and environment variables
-- `PlaywrightSettings.cs` defines the settings model used by the framework
+- `PlaywrightSettings.cs` defines the runtime configuration model
 
-### `Fixtures/`
-Contains shared factories and fixtures.
+This keeps browser, API base URL, timeout, and launch settings centralized and easy to change.
 
-- `BrowserFixture.cs` manages the browser lifecycle for UI tests
-- `ApiClientFactory.cs` creates API request contexts for API tests and UI setup helpers
+## 2. Fixtures and Lifecycle Management
 
-### `Api/`
-Contains API automation structure.
+Shared lifecycle concerns are handled in `Fixtures/`.
 
-#### `Api/Clients/`
-API helper classes used by API tests.
+- `BrowserFixture.cs`
+  - initializes Playwright
+  - launches the configured browser
+  - creates browser contexts for UI tests
+- `ApiClientFactory.cs`
+  - creates `IAPIRequestContext` instances
+  - is used by API tests and by UI setup helpers for seeding/authentication
+- `Collections.cs`
+  - defines the shared UI test collection
+- `UiBaseTest.cs`
+  - provides a common UI base class
+  - creates a fresh browser context per test
+  - manages context disposal and tracing
 
-- `AuthApi.cs` handles authentication endpoints
-- `EventApi.cs` handles `/events`
-- `BookingApi.cs` handles `/bookings`
+### Why this matters
 
-#### `Api/Models/`
-Typed API models separated by purpose.
+This structure keeps lifecycle logic out of test methods and makes test classes easier to read and maintain.
 
-- `Queries/` contains query models
-- `Requests/` contains request payload models
-- `Responses/` contains typed response models
+## 3. API Automation Design
 
-#### `Api/Tests/Features/`
-Feature-level API tests.
+The API layer is organized around **typed clients, models, feature tests, and reusable test infrastructure**.
 
-- `Features/Auth/` covers authentication flows
-- `Features/Events/` covers event endpoints
-- `Features/Bookings/` covers booking endpoints
+### API Clients
 
-#### `Api/Tests/Infrastructure/`
-Shared API test support.
+Located in `Api/Clients/`:
+- `AuthApi.cs`
+- `EventApi.cs`
+- `BookingApi.cs`
 
-- `Auth/` contains auth-specific support such as `AuthHelper.cs`
-- `Builders/` contains request builders for reusable test data creation
-  - `EventBuilder.cs` builds valid event payloads
-  - `BookingBuilder.cs` builds valid booking payloads
-- `Contexts/` contains test contexts that bundle one API request context with the clients needed for a feature area
-  - `AuthTestContext.cs` exposes `AuthApi`
-  - `EventTestContext.cs` exposes `AuthApi` and `EventApi`
-  - `BookingTestContext.cs` exposes `AuthApi`, `EventApi`, and `BookingApi`
-- `Helpers/` contains reusable API test setup and response parsing helpers
-  - `EventTestHelpers.cs` provides event setup and shared JSON response readers like `GetRootAsync()` and `GetData()`
-  - `BookingTestHelpers.cs` provides booking setup and shared JSON response readers
+These classes encapsulate endpoint interaction and reduce repeated request code in tests.
 
-These infrastructure pieces act as lightweight setup/build utilities for API tests so feature tests stay focused on assertions instead of repeating payload creation, request bootstrapping, and response extraction.
+### API Models
 
-### `Ui/`
-Contains UI automation structure.
+Located in `Api/Models/`:
+- `Queries/` for query parameters
+- `Requests/` for payloads
+- `Responses/` for typed response contracts
 
-#### `Ui/Pages/`
-Page Object Model layer for UI flows.
+This helps keep API tests readable and explicit.
 
+### API Test Infrastructure
+
+Located in `Api/Tests/Infrastructure/`:
+
+- `Auth/`
+  - auth-related helpers such as `AuthHelper.cs`
+- `Builders/`
+  - reusable valid test data generators
+  - `EventBuilder.cs`
+  - `BookingBuilder.cs`
+- `Contexts/`
+  - lightweight wrappers that assemble the feature-specific API clients a test needs
+  - `AuthTestContext.cs`
+  - `EventTestContext.cs`
+  - `BookingTestContext.cs`
+- `Helpers/`
+  - shared response parsing and test setup logic
+  - `EventTestHelpers.cs`
+  - `BookingTestHelpers.cs`
+
+### Why this matters
+
+This design keeps API feature tests focused on assertions instead of repeating:
+- request context creation
+- authentication setup
+- payload construction
+- raw JSON parsing
+
+## 4. UI Automation Design
+
+The UI layer follows the **Page Object Model** and uses API helpers for stable setup.
+
+### UI Pages
+
+Located in `Ui/Pages/`:
 - `LoginPage.cs`
 - `NavigationBar.cs`
 - `EventsPage.cs`
@@ -169,50 +218,160 @@ Page Object Model layer for UI flows.
 - `AdminEventsPage.cs`
 - `MyBookingsPage.cs`
 
-#### `Ui/Helpers/`
-UI-side helpers for setup and shared test data.
+These classes encapsulate selectors and user interactions so test methods stay scenario-focused.
 
-- `AuthHelper.cs` handles authentication setup for UI tests
-- `EventSetupHelper.cs` creates event test data for UI scenarios
-- `BookingSetupHelper.cs` creates booking test data for UI scenarios
-- `TestDataModels.cs` contains UI-facing setup models
+### UI Helpers
 
-#### `Ui/Tests/`
-UI test suites.
+Located in `Ui/Helpers/`:
+- `AuthHelper.cs`
+- `EventSetupHelper.cs`
+- `BookingSetupHelper.cs`
+- `TestDataModels.cs`
 
-- `LoginTests.cs` covers login flows
-- `EventTests.cs` covers event UI flows
-- `BookingTests.cs` covers booking UI flows
+These helpers are used to:
+- register/authenticate users
+- seed events/bookings through the API
+- avoid expensive or repetitive UI-only setup flows when setup can be done faster through backend calls
 
-### `appsettings.json`
-Contains runtime settings for the framework, including:
+### Why this matters
 
-- `BaseUrl`
-- `ApiBaseUrl`
-- browser type
-- launch options
-- viewport settings
-- timeout
+Using API-assisted setup in UI tests is a practical tradeoff:
+- tests are faster
+- tests are less brittle
+- scenarios can start closer to the real assertion point
+
+---
+
+## Test Organization Strategy
+
+Tests are organized by **feature area** rather than by technical action.
+
+### UI tests
+Located in `Ui/Tests/`:
+- `LoginTests.cs`
+- `EventTests.cs`
+- `BookingTests.cs`
+
+### API tests
+Located in `Api/Tests/Features/`:
+- `Auth/`
+- `Events/`
+- `Bookings/`
+
+### Why this matters
+
+A feature-based structure scales better in real projects because it matches how product functionality is discussed by teams.
+
+---
+
+## Test Tagging Strategy
+
+The framework now uses three tags:
+
+| Tag | Values | Purpose |
+|---|---|---|
+| `Layer` | `UI`, `API` | separates test level |
+| `Feature` | `Auth`, `Events`, `Bookings` | separates functional area |
+| `Type` | `Smoke`, `Regression` | separates execution intent |
+
+### Tag placement
+
+- `Layer` → class level
+- `Feature` → class level
+- `Type` → test method level
+
+This keeps the broad classification at the suite level and allows smoke/regression mixing inside the same feature class.
+
+### Example filters
+
+Run all UI tests:
+
+```bash
+dotnet test --filter "Layer=UI"
+```
+
+Run all API tests:
+
+```bash
+dotnet test --filter "Layer=API"
+```
+
+Run only auth tests:
+
+```bash
+dotnet test --filter "Feature=Auth"
+```
+
+Run only smoke tests:
+
+```bash
+dotnet test --filter "Type=Smoke"
+```
+
+Run UI smoke tests only:
+
+```bash
+dotnet test --filter "Layer=UI&Type=Smoke"
+```
+
+Run API bookings regression tests:
+
+```bash
+dotnet test --filter "Layer=API&Feature=Bookings&Type=Regression"
+```
+
+---
+
+## GitHub Actions CI Integration
+
+CI is already configured in **`.github/workflows/tests.yml`**.
+
+### Current trigger
+
+The workflow runs on:
+- **push to `main`**
+
+### Current pipeline coverage
+
+The workflow currently includes:
+- **API Regression** job
+- **UI Smoke Tests** job
+
+### What the workflow does
+
+For each run, the pipeline:
+- checks out the repository
+- sets up **.NET 10**
+- restores and builds the solution
+- installs Playwright and required browser dependencies
+- executes the test commands through the CI scripts
+- uploads test results as artifacts
+- publishes `.trx` results using a test reporter
+- uploads Playwright traces/logs on failure
+
+---
 
 ## Execution Flow
 
 ### UI flow
 
 1. settings are loaded from `appsettings.json`
-2. `BrowserFixture` starts Playwright and launches the browser
-3. UI tests create a browser context and page
-4. UI helpers prepare auth or seed data when needed
-5. page objects perform UI actions and assertions
-6. resources are disposed after execution
+2. `BrowserFixture` starts Playwright and launches the configured browser
+3. `UiBaseTest` creates a fresh browser context for the test
+4. UI helpers seed users/events/bookings when needed
+5. page objects perform actions and assertions
+6. tracing and browser context are cleaned up after the test
 
 ### API flow
 
 1. settings are loaded from `appsettings.json`
 2. `ApiClientFactory` creates an API request context
-3. test contexts initialize the needed API clients
-4. API clients send requests and deserialize typed responses
-5. tests validate status codes and response content
-6. resources are disposed after execution
+3. a feature test context initializes the required API clients
+4. builders/helpers prepare valid test data
+5. tests execute requests and assert status codes and response content
+6. request contexts are disposed after execution
+
+---
 
 ## Prerequisites
 
@@ -221,6 +380,8 @@ Before running the project, make sure you have:
 - a compatible **.NET SDK** installed for `net10.0`
 - internet access to reach the configured application URLs
 - Playwright browsers installed locally
+
+---
 
 ## Setup
 
@@ -256,19 +417,65 @@ pwsh .\bin\Debug\net10.0\playwright.ps1 install
 
 > If you build in `Release`, update the path accordingly.
 
-## Running the Project
+---
+
+## Running the Tests
 
 From the `PlaywrightTests` folder:
+
+Run everything:
 
 ```bash
 dotnet test
 ```
 
-## `.gitignore`
+Run only UI tests:
 
-The root `.gitignore` is intentionally minimal and currently ignores:
+```bash
+dotnet test --filter "Layer=UI"
+```
 
-- `bin/`
-- `obj/`
-- `.vs/`
-- `TestResults/`
+Run only API tests:
+
+```bash
+dotnet test --filter "Layer=API"
+```
+
+Run smoke tests only:
+
+```bash
+dotnet test --filter "Type=Smoke"
+```
+
+Run regression tests only:
+
+```bash
+dotnet test --filter "Type=Regression"
+```
+
+---
+
+## Suggested Next Improvements
+
+To take this framework further, good next steps would be:
+
+- extend CI with pull request triggers and scheduled/nightly runs
+- publish richer Playwright artifacts or execution summaries for easier triage
+- add richer reporting (for example, HTML reporting dashboards)
+- introduce environment-specific configuration profiles
+- add contract/schema validation for selected API responses
+- add nightly regression execution with tag-based filtering
+
+These are intentionally listed as next steps rather than required complexity, which helps keep the current framework practical and interview-friendly.
+
+---
+
+## Summary
+
+This project demonstrates a clean automation framework that combines:
+- **UI testing with Playwright page objects**
+- **API testing with typed clients and reusable infrastructure**
+- **fixture-based lifecycle management**
+- **tagged execution for smoke and regression suites**
+
+The goal is not just to have tests, but to show a framework structure that is easy to explain, extend, and maintain.

@@ -2,6 +2,7 @@ using PlaywrightTests.Api.Tests.Infrastructure.Contexts;
 using PlaywrightTests.Api.Tests.Infrastructure.Helpers;
 using PlaywrightTests.Api.Tests.Infrastructure.Auth;
 using PlaywrightTests.Api.Tests.Infrastructure.Builders;
+using PlaywrightTests.Fixtures;
 
 namespace PlaywrightTests.Api.Tests.Features.Events;
 

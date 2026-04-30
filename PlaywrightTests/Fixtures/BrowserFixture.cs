@@ -40,7 +40,6 @@ public class BrowserFixture : IAsyncLifetime
         var context = await Browser.NewContextAsync(new BrowserNewContextOptions
         {
             BaseURL = _settings.BaseUrl,
-
             ViewportSize = _settings.ContextOptions.UseViewport
                 ? new()
                 {
@@ -60,19 +59,6 @@ public class BrowserFixture : IAsyncLifetime
         context.SetDefaultTimeout(_settings.Timeout);
 
         return context;
-    }
-
-    public static async Task StopTracingAsync(
-        IBrowserContext context,
-        [System.Runtime.CompilerServices.CallerMemberName] string testName = ""
-    )
-    {
-        Directory.CreateDirectory("traces");
-
-        await context.Tracing.StopAsync(new()
-        {
-            Path = $"traces/{testName}-{Guid.NewGuid()}.zip"
-        });
     }
 
     public async Task DisposeAsync()

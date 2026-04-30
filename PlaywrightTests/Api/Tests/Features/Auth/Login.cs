@@ -1,4 +1,5 @@
 ﻿using PlaywrightTests.Api.Tests.Infrastructure.Contexts;
+using PlaywrightTests.Fixtures;
 
 namespace PlaywrightTests.Api.Tests.Features.Auth;
 

@@ -1,6 +1,8 @@
 using PlaywrightTests.Config;
 using Microsoft.Playwright;
 
+namespace PlaywrightTests.Fixtures;
+
 public class ApiClientFactory : IAsyncLifetime
 {
     private IPlaywright _playwright = default!;

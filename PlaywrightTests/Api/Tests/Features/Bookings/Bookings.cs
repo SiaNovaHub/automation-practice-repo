@@ -1,10 +1,10 @@
 using System.Text.Json;
 using PlaywrightTests.Api.Models.Queries;
-using PlaywrightTests.Api.Models.Requests;
 using PlaywrightTests.Api.Tests.Infrastructure.Contexts;
 using PlaywrightTests.Api.Tests.Infrastructure.Helpers;
 using PlaywrightTests.Api.Tests.Infrastructure.Auth;
 using PlaywrightTests.Api.Tests.Infrastructure.Builders;
+using PlaywrightTests.Fixtures;
 
 namespace PlaywrightTests.Api.Tests.Features.Bookings;
 

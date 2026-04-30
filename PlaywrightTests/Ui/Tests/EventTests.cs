@@ -7,98 +7,74 @@ namespace PlaywrightTests.Ui.Tests;
 
 [Trait("Layer", "UI")]
 [Trait("Feature", "Events")]
-public class EventTests(
-    BrowserFixture fixture,
-    ApiClientFactory apiFactory
-    ) : IClassFixture<BrowserFixture>, IClassFixture<ApiClientFactory>
+[Collection("UI collection")]
+public class EventTests : UiBaseTest
 {
-    private readonly BrowserFixture _fixture = fixture;
-    private readonly ApiClientFactory _apiFactory = apiFactory;
+    public EventTests(BrowserFixture fixture, ApiClientFactory apiClientFactory)
+        : base(fixture, apiClientFactory)
+    {
+    }
 
     [Trait("Type", "Smoke")]
     [Fact]
     public async Task SeededEventAppearsInEventsList()
     {
-        await using var context = await _fixture.CreateContextAsync();
+        var context = Context;
+        var user = await AuthHelper.RegisterAndAuthenticateAsync(context, ApiClientFactory);
+        var eventInput = EventSetupHelper.BuildEvent();
+        await EventSetupHelper.CreateEventAsync(ApiClientFactory, user.Token, eventInput);
 
-        try
-        {
-            var user = await AuthHelper.RegisterAndAuthenticateAsync(context, _apiFactory);
-            var eventInput = EventSetupHelper.BuildEvent();
-            await EventSetupHelper.CreateEventAsync(_apiFactory, user.Token, eventInput);
+        var page = await context.NewPageAsync();
+        var eventsPage = new EventsPage(page);
 
-            var page = await context.NewPageAsync();
-            var eventsPage = new EventsPage(page);
+        // Act
+        await eventsPage.NavigateAsync();
 
-            // Act
-            await eventsPage.NavigateAsync();
-
-            // Assert
-            await Expect(eventsPage.GetEventCard(eventInput.Title)).ToBeVisibleAsync();
-        }
-        finally
-        {
-            await BrowserFixture.StopTracingAsync(context);
-        }
+        // Assert
+        await Expect(eventsPage.GetEventCard(eventInput.Title)).ToBeVisibleAsync();
     }
 
     [Trait("Type", "Regression")]
     [Fact]
     public async Task SeededEventDetailsShowEventData()
     {
-        await using var context = await _fixture.CreateContextAsync();
+        var context = Context;
+        var user = await AuthHelper.RegisterAndAuthenticateAsync(context, ApiClientFactory);
+        var eventInput = EventSetupHelper.BuildEvent();
+        var createdEvent = await EventSetupHelper.CreateEventAsync(ApiClientFactory, user.Token, eventInput);
 
-        try
-        {
-            var user = await AuthHelper.RegisterAndAuthenticateAsync(context, _apiFactory);
-            var eventInput = EventSetupHelper.BuildEvent();
-            var createdEvent = await EventSetupHelper.CreateEventAsync(_apiFactory, user.Token, eventInput);
+        var page = await context.NewPageAsync();
+        var eventDetailsPage = new EventDetailsPage(page);
 
-            var page = await context.NewPageAsync();
-            var eventDetailsPage = new EventDetailsPage(page);
+        // Act
+        await eventDetailsPage.NavigateAsync(createdEvent.Id);
 
-            // Act
-            await eventDetailsPage.NavigateAsync(createdEvent.Id);
-
-            // Assert
-            await Expect(eventDetailsPage.Title).ToHaveTextAsync(eventInput.Title);
-            await Expect(page.GetByText(eventInput.Venue)).ToBeVisibleAsync();
-            await Expect(page.GetByText(eventInput.City).First).ToBeVisibleAsync();
-            Assert.Equal(eventInput.TotalSeats, await eventDetailsPage.GetAvailableSeatsAsync());
-            Assert.Equal(eventInput.TotalSeats, await eventDetailsPage.GetTotalSeatsAsync());
-        }
-        finally
-        {
-            await BrowserFixture.StopTracingAsync(context);
-        }
+        // Assert
+        await Expect(eventDetailsPage.Title).ToHaveTextAsync(eventInput.Title);
+        await Expect(page.GetByText(eventInput.Venue)).ToBeVisibleAsync();
+        await Expect(page.GetByText(eventInput.City).First).ToBeVisibleAsync();
+        Assert.Equal(eventInput.TotalSeats, await eventDetailsPage.GetAvailableSeatsAsync());
+        Assert.Equal(eventInput.TotalSeats, await eventDetailsPage.GetTotalSeatsAsync());
     }
 
     [Trait("Type", "Smoke")]
     [Fact]
     public async Task CreateEventFromAdmin_ShowsNewEventInManageEventsTable()
     {
-        await using var context = await _fixture.CreateContextAsync();
+        var context = Context;
+        await AuthHelper.RegisterAndAuthenticateAsync(context, ApiClientFactory);
 
-        try
-        {
-            await AuthHelper.RegisterAndAuthenticateAsync(context, _apiFactory);
+        var eventInput = EventSetupHelper.BuildEvent();
+        var page = await context.NewPageAsync();
+        var adminEventsPage = new AdminEventsPage(page);
 
-            var eventInput = EventSetupHelper.BuildEvent();
-            var page = await context.NewPageAsync();
-            var adminEventsPage = new AdminEventsPage(page);
+        // Act
+        await adminEventsPage.NavigateAsync();
+        await adminEventsPage.CreateEventAsync(eventInput);
 
-            // Act
-            await adminEventsPage.NavigateAsync();
-            await adminEventsPage.CreateEventAsync(eventInput);
-
-            // Assert
-            await Expect(adminEventsPage.GetEventRowByTitle(eventInput.Title)).ToBeVisibleAsync();
-            await Expect(adminEventsPage.GetEventRowByTitle(eventInput.Title)).ToContainTextAsync(eventInput.City);
-            await Expect(adminEventsPage.GetEventRowByTitle(eventInput.Title)).ToContainTextAsync("20/20");
-        }
-        finally
-        {
-            await BrowserFixture.StopTracingAsync(context);
-        }
+        // Assert
+        await Expect(adminEventsPage.GetEventRowByTitle(eventInput.Title)).ToBeVisibleAsync();
+        await Expect(adminEventsPage.GetEventRowByTitle(eventInput.Title)).ToContainTextAsync(eventInput.City);
+        await Expect(adminEventsPage.GetEventRowByTitle(eventInput.Title)).ToContainTextAsync("20/20");
     }
 }
